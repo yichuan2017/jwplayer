@@ -1,12 +1,13 @@
 define([
     'plugins/plugins',
+    'playlist/playlist',
     'playlist/loader',
     'utils/scriptloader',
     'utils/constants',
     'utils/underscore',
     'utils/helpers',
     'events/events'
-], function(plugins, PlaylistLoader, ScriptLoader, Constants, _, utils, events) {
+], function(plugins, Playlist, PlaylistLoader, ScriptLoader, Constants, _, utils, events) {
 
     var _pluginLoader,
         _playlistLoader;
@@ -121,8 +122,21 @@ define([
         }
     }
 
+    function _setPlaylist(_model, p) {
+        var playlist = Playlist(p);
+
+        playlist = Playlist.filterPlaylist(playlist, _model.getProviders(), _model.get('androidhls'),
+            _model.get('drm'), _model.get('preload'));
+
+        _model.set('playlist', playlist);
+        _model.set('item', 0);
+        _model.set('playlistItem', playlist[0]);
+        _model.loadMediaItem(playlist[0]);
+    }
+
     function _completePlaylist(resolve, _model, playlist) {
-        _model.setPlaylist(playlist);
+        _setPlaylist(_model, playlist);
+
         var p = _model.get('playlist');
         if (!_.isArray(p) || p.length === 0) {
             _playlistError(resolve, 'Playlist type not supported');
@@ -213,7 +227,6 @@ define([
     }
 
     function _setupComponents(resolve, _model, _api, _view) {
-        _model.setItem(0);
         _view.setup();
         resolve();
     }

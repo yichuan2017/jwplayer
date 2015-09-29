@@ -224,7 +224,7 @@ define([
 
             if(this.elements.playlist) {
                 this.elements.playlist.on('select', function (value) {
-                    this._model.once('setItem', function () {
+                    this._model.once('mediaItemSet', function () {
                         this._api.play();
                     }, this);
                     this._api.load(value);

@@ -15,6 +15,10 @@ define([
             this.loadImage(this.model, this.model.get('playlistItem'));
         },
         loadImage: function(model, playlistItem) {
+            if (!playlistItem) {
+                model.once('change:playlistItem', this.loadImage);
+                return;
+            }
             var img = playlistItem.image;
 
             if (_.isString(img)) {

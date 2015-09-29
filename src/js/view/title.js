@@ -29,6 +29,11 @@ define([
         },
 
         playlistItem : function(model, item) {
+            if (!item) {
+                model.once('change:playlistItem', this.playlistItem);
+                return;
+            }
+
             if (model.get('displaytitle') || model.get('displaydescription')) {
                 var title = '';
                 var description = '';

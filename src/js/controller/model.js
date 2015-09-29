@@ -1,6 +1,5 @@
 define([
     'utils/helpers',
-    'playlist/playlist',
     'providers/providers',
     'controller/storage',
     'controller/qoe',
@@ -9,7 +8,7 @@ define([
     'utils/simplemodel',
     'events/events',
     'events/states'
-], function(utils, Playlist, Providers, storage, QOE, _, Events, SimpleModel, events, states) {
+], function(utils, Providers, storage, QOE, _, Events, SimpleModel, events, states) {
 
     // Represents the state of the player
     var Model = function() {
@@ -58,6 +57,14 @@ define([
 
         this.getConfiguration = function() {
             return _.omit(this.clone(), ['mediaModel']);
+        };
+
+        this.getProviders = function() {
+            if (!_providers) {
+                this.updateProviders();
+            }
+
+            return _providers;
         };
 
         this.updateProviders = function() {
@@ -204,48 +211,20 @@ define([
             }
         };
 
-        this.setPlaylist = function(p) {
-            var playlist = Playlist(p);
-
-            playlist = Playlist.filterPlaylist(playlist, _providers, _this.get('androidhls'),
-                this.get('drm'), this.get('preload'));
-
-            this.set('playlist', playlist);
-
-            if (playlist.length === 0) {
-                this.mediaController.trigger(events.JWPLAYER_ERROR, {
-                    message: 'Error loading playlist: No playable sources found'
-                });
-                return;
-            }
-        };
-
-        // Give the option for a provider to be forced
-        this.chooseProvider = function(source) {
-            return _providers.choose(source).provider;
-        };
-
-        this.setItem = function(index) {
-            var playlist = _this.get('playlist');
-
-            // If looping past the end, or before the beginning
-            var newItem = (index + playlist.length) % playlist.length;
-
+        this.loadMediaItem = function(item) {
             // Item is actually changing
             this.mediaModel.off();
             this.mediaModel = new MediaModel();
             this.set('mediaModel', this.mediaModel);
 
-            this.set('item', newItem);
-            // select provider based on item source (video, youtube...)
-            var item = this.get('playlist')[newItem];
-            this.set('playlistItem', item);
+
             var source = item && item.sources && item.sources[0];
             if (source === undefined) {
                 // source is undefined when resetting index with empty playlist
                 return;
             }
 
+            // select provider based on item source (video, youtube...)
             var Provider = this.chooseProvider(source);
             if (!Provider) {
                 throw new Error('No suitable provider found');
@@ -261,7 +240,12 @@ define([
                 _currentProvider.init(item);
             }
 
-            this.trigger('setItem');
+            _this.trigger('mediaItemSet');
+        };
+
+        // Give the option for a provider to be forced
+        this.chooseProvider = function(source) {
+            return _providers.choose(source).provider;
         };
 
         this.resetProvider = function() {

@@ -360,7 +360,13 @@ define([
             _userActivity();
 
             // adds video tag to video layer
-            _model.getVideo().setContainer(_videoLayer);
+            if (_model.getVideo()) {
+                _model.getVideo().setContainer(_videoLayer);
+            } else {
+                _model.once('mediaItemSet', function() {
+                    _model.getVideo().setContainer(_videoLayer);
+                });
+            }
 
             // Native fullscreen (coming through from the provider)
             _model.mediaController.on('fullscreenchange', _fullscreenChangeHandler);
@@ -516,8 +522,7 @@ define([
             } else {
                 utils.addClass(_playerElement, 'jw-flag-controls-disabled');
             }
-
-            model.getVideo().setControls(bool);
+            //model.getVideo().setControls(bool); // look into this for flash
         };
 
         function _doubleClickFullscreen() {

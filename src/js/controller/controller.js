@@ -6,6 +6,7 @@ define([
     'controller/Setup',
     'controller/captions',
     'controller/model',
+    'playlist/playlist',
     'playlist/loader',
     'utils/helpers',
     'view/view',
@@ -15,7 +16,7 @@ define([
     'events/events',
     'view/error'
 ], function(Config, deprecateInit, InstreamAdapter, _, Setup, Captions,
-            Model, PlaylistLoader, utils, View, Events, changeStateEvent, states, events, error) {
+            Model, Playlist, PlaylistLoader, utils, View, Events, changeStateEvent, states, events, error) {
 
     function _queue(command) {
         return function() {
@@ -218,7 +219,7 @@ define([
                 _stop(true);
 
                 if (_model.get('autostart')) {
-                    _model.once('setItem', _play);
+                    _model.once('mediaItemSet', _play);
                 }
 
                 switch (typeof item) {
@@ -226,11 +227,10 @@ define([
                         _loadPlaylist(item);
                         break;
                     case 'object':
-                        _model.setPlaylist(item);
-                        _model.setItem(0);
+                        _setPlaylist(item);
                         break;
                     case 'number':
-                        _model.setItem(item);
+                        _setItem(item);
                         break;
                 }
             }
@@ -272,7 +272,7 @@ define([
 
                 if (_model.get('state') === states.COMPLETE) {
                     _stop(true);
-                    _model.setItem(0);
+                    _setItem(0);
                 }
                 if (!_preplay) {
                     _preplay = true;
@@ -309,7 +309,7 @@ define([
 
             function _stop(internal) {
                 // Reset the autostart play
-                _model.off('setItem', _play);
+                _model.off('mediaItemSet', _play);
 
                 var fromApi = !internal;
 
@@ -382,8 +382,36 @@ define([
 
             function _item(index) {
                 _stop(true);
-                _model.setItem(index);
+                _setItem(index);
                 _play();
+            }
+
+            function _setPlaylist(p) {
+                var playlist = Playlist(p);
+
+                playlist = Playlist.filterPlaylist(playlist, _model.getProviders(), _model.get('androidhls'),
+                    _model.get('drm'), _model.get('preload'));
+
+                _model.set('playlist', playlist);
+
+                if (playlist.length === 0) {
+                    _model.mediaController.trigger(events.JWPLAYER_ERROR, {
+                        message: 'Error loading playlist: No playable sources found'
+                    });
+                    return;
+                }
+
+                _setItem(0);
+            }
+
+            function _setItem(index) {
+                var playlist = _model.get('playlist');
+
+                // If looping past the end, or before the beginning
+                var idx = (index + playlist.length) % playlist.length;
+                _model.set('item', idx);
+                _model.set('playlistItem', playlist[idx]);
+                _model.loadMediaItem(playlist[idx]);
             }
 
             function _prev() {
