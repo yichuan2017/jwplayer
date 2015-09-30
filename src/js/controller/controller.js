@@ -215,6 +215,7 @@ define([
                         break;
                     case 'number':
                         _setItem(item);
+                        _play();
                         break;
                 }
             }

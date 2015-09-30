@@ -16,6 +16,14 @@ define([
             // Video provider
             _provider;
 
+
+        function onMute(model, mute) {
+            _provider.mute(mute);
+        }
+        function onVolume(model, volume) {
+            _provider.volume(volume);
+        }
+
         this._playerModel = pm;
         this.attributes = {};
 
@@ -61,8 +69,8 @@ define([
 
                 case events.JWPLAYER_MEDIA_BUFFER:
                     this.set('buffer', data.bufferPercent);
-
                     /* falls through */
+
                 case events.JWPLAYER_MEDIA_META:
                     var duration = data.duration;
                     if (_.isNumber(duration)) {
@@ -84,7 +92,7 @@ define([
                 case events.JWPLAYER_MEDIA_TIME:
                     this.set('position', data.position);
                     this.set('duration', data.duration);
-                    break;
+                    return;
                 case events.JWPLAYER_PROVIDER_CHANGED:
                     this.set('provider', _provider.getName());
                     break;
@@ -144,12 +152,8 @@ define([
             _provider.mute(_this._playerModel.get('mute'));
             _provider.on('all', _videoEventHandler, this);
 
-            _this._playerModel.on('change:mute', function(model, mute) {
-                _provider.mute(mute);
-            });
-            _this._playerModel.on('change:volume', function(model, volume) {
-                _provider.volume(volume);
-            });
+            _this._playerModel.on('change:mute', onMute);
+            _this._playerModel.on('change:volume', onVolume);
         };
 
         this.destroy = function() {
@@ -157,6 +161,8 @@ define([
                 _provider.off(null, null, this);
                 _provider.destroy();
             }
+            _this._playerModel.off('change:mute', onMute);
+            _this._playerModel.off('change:volume', onVolume);
         };
 
         this.getVideo = function() {

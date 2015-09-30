@@ -649,7 +649,7 @@ define([
             // pass fullscreen state to Flash provider
             // provider.getName() is the same as _api.getProvider() or _model.get('provider')
             var provider = model.get('provider');
-            if (provider && provider.getName().name.indexOf('flash') === 0) {
+            if (provider && provider.name.indexOf('flash') === 0) {
                 mc.setFullscreen(state);
             }
         };
