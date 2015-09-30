@@ -22,8 +22,8 @@ define([
             var evt = {
                 type: eventType,
                 newstate: newstate,
-                oldstate: oldstate
-                //reason: model.mediaModel.get('state')
+                oldstate: oldstate,
+                reason: model.get('state')
             };
             this.trigger(eventType, evt);
         }

@@ -49,7 +49,11 @@ define([
     }
 
     function initModel(model) {
-        function onMediaModel(model, mediaModel, oldMediaModel) {
+        var oldMediaModel = null;
+
+        function onMediaModel() {
+            var mediaModel = model.getVideo();
+
             // finish previous item
             if (model._qoeItem) {
                 model._qoeItem.end(oldMediaModel.get('state'));
@@ -65,13 +69,11 @@ define([
                 model._qoeItem.end(oldstate);
                 model._qoeItem.start(newstate);
             });
+
+            oldMediaModel = model;
         }
 
-        if (model.mediaModel) {
-            onMediaModel(model, model.mediaModel, null);
-        }
-
-        model.on('change:mediaModel', onMediaModel);
+        model.on('mediaItemSet', onMediaModel);
     }
 
     return {

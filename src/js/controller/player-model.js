@@ -52,9 +52,6 @@ define([
                 fullscreen: false,
                 compactUI: false,
                 scrubbing : false
-                //duration: 0,
-                //position: 0,
-                //buffer: 0
             });
 
             // Mobile doesn't support autostart
@@ -102,8 +99,6 @@ define([
             }
             activeMC = mc;
             this.mirror(activeMC);
-
-            activeMC.on('all', this.mediaController.trigger.bind(this));
         };
 
         this.unmirror = function() {
@@ -141,6 +136,7 @@ define([
 
             function eventForward(name) {
                 if (name.indexOf('change:') === -1) {
+                    console.log('event forward : ' + name);
                     playerModel.mediaController.trigger.apply(playerModel, arguments);
                 }
             }
