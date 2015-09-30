@@ -203,14 +203,6 @@ define([
             return _provider;
         };
 
-
-        this.setFullscreen = function(state) {
-            state = !!state;
-            if (state !== _this.get('fullscreen')) {
-                _this.set('fullscreen', state);
-            }
-        };
-
         this.loadMediaItem = function(item) {
             // Item is actually changing
             this.mediaModel.off();
@@ -232,7 +224,7 @@ define([
 
             // If we are changing video providers
             if (!(_currentProvider instanceof Provider)) {
-                _this.changeVideoProvider(Provider);
+                this.changeVideoProvider(Provider);
             }
 
             // this allows the providers to preload
@@ -240,7 +232,7 @@ define([
                 _currentProvider.init(item);
             }
 
-            _this.trigger('mediaItemSet');
+            this.trigger('mediaItemSet');
         };
 
         // Give the option for a provider to be forced

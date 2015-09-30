@@ -406,6 +406,8 @@ define([
             // watch for changes
             _model.on('change:stretching', _onStretchChange);
 
+            _model.on('change:fullscreen', _fullscreen);
+
             _stateHandler(null, states.IDLE);
 
             if (!_isMobile) {
@@ -624,21 +626,10 @@ define([
             }
         }
 
-
         /**
          * Switch fullscreen mode.
          **/
-        var _fullscreen = this.fullscreen = function(state) {
-            if (!utils.exists(state)) {
-                state = !_model.get('fullscreen');
-            }
-
-            state = !!state;
-
-            // if state is already correct, return
-            if (state === _model.get('fullscreen')) {
-                return;
-            }
+        var _fullscreen = function(model, state) {
 
             // If it supports DOM fullscreen
             var provider = _model.getVideo();
@@ -838,11 +829,6 @@ define([
         }
 
         function _toggleFullscreen(fullscreenState) {
-            // update model
-            _model.setFullscreen(fullscreenState);
-            if (_instreamModel) {
-                _instreamModel.setFullscreen(fullscreenState);
-            }
 
             if (fullscreenState) {
                 // Browsers seem to need an extra second to figure out how large they are in fullscreen...
@@ -873,7 +859,9 @@ define([
 
         function _playlistCompleteHandler() {
             _replayState = true;
-            _fullscreen(false);
+            if (_model.get('fullscreen') === true) {
+                _model.set('fullscreen', true);
+            }
         }
 
         function _playlistItemHandler() {
