@@ -4,7 +4,7 @@ define([
     'events/change-state-event',
     'events/events',
     'events/states',
-    'controller/model'
+    'controller/player-model'
 ], function(_, Events, changeStateEvent, events, states, Model) {
 
     var InstreamHtml5 = function(_controller, _model) {

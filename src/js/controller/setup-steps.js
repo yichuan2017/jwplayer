@@ -227,7 +227,8 @@ define([
 
     function _setupComponents(resolve, _model, _api, _view) {
         var playlist = _model.get('playlist');
-        _model.loadMediaItem(playlist[0]);
+        var mc = _model.createMediaController(playlist[0]);
+        _model.setActiveMediaController(mc);
         _view.setup();
         resolve();
     }

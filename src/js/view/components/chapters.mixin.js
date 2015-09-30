@@ -47,6 +47,7 @@ define([
 
         drawCues: function () {
             // We won't want to draw them until we have a duration
+            /*
             var duration = this._model.mediaModel.get('duration');
             if (!duration || duration <= 0) {
                 this._model.mediaModel.once('change:duration', this.drawCues, this);
@@ -64,6 +65,7 @@ define([
                 });
                 _this.elementRail.appendChild(cue.el);
             });
+            */
         },
 
         resetChapters : function() {

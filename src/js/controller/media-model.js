@@ -11,64 +11,26 @@ define([
 ], function(utils, Providers, storage, QOE, _, Events, SimpleModel, events, states) {
 
     // Represents the state of the player
-    var Model = function() {
+    var MediaModel = function(pm) {
         var _this = this,
             // Video provider
-            _providers,
-            _provider,
-            // Saved settings
-            _cookies = {},
-            _currentProvider = utils.noop;
+            _provider;
 
-        this.mediaController = _.extend({}, Events);
-        this.mediaModel = new MediaModel();
-        this.set('mediaModel', this.mediaModel);
-
-        QOE.model(this);
+        this._playerModel = pm;
+        this.attributes = {};
 
         this.setup = function(config) {
-            if (config.cookies) {
-                storage.model(this);
-                _cookies = storage.getAllItems();
-            }
 
-            _.extend(this.attributes, config, _cookies, {
+            _.extend(this.attributes, config, {
                 // Initial state, upon setup
                 state: states.IDLE,
-                // Initially we don't assume Flash is needed
-                flashBlocked : false,
-                fullscreen: false,
-                compactUI: false,
-                scrubbing : false,
                 duration: 0,
                 position: 0,
-                buffer: 0
+                buffer: 0,
+                active: false
             });
 
-            // Mobile doesn't support autostart
-            if (utils.isMobile()) {
-                this.set('autostart', false);
-            }
-
-            this.updateProviders();
-
             return this;
-        };
-
-        this.getConfiguration = function() {
-            return _.omit(this.clone(), ['mediaModel']);
-        };
-
-        this.getProviders = function() {
-            if (!_providers) {
-                this.updateProviders();
-            }
-
-            return _providers;
-        };
-
-        this.updateProviders = function() {
-            _providers = new Providers(this.getConfiguration());
         };
 
         function _videoEventHandler(type, data) {
@@ -86,11 +48,11 @@ define([
                     return;
 
                 case events.JWPLAYER_MEDIA_TYPE:
-                    this.mediaModel.set('mediaType', data.mediaType);
+                    this.set('mediaType', data.mediaType);
                     break;
 
                 case events.JWPLAYER_PLAYER_STATE:
-                    this.mediaModel.set('state', data.newstate);
+                    this.set('state', data.newstate);
 
                     // This "return" is important because
                     //  we are choosing to not propagate this event.
@@ -104,25 +66,22 @@ define([
                 case events.JWPLAYER_MEDIA_META:
                     var duration = data.duration;
                     if (_.isNumber(duration)) {
-                        this.mediaModel.set('duration', duration);
                         this.set('duration', duration);
                     }
                     break;
 
                 case events.JWPLAYER_MEDIA_BUFFER_FULL:
                     // media controller
-                    if(this.mediaModel.get('playAttempt')) {
+                    if(this.get('playAttempt')) {
                         this.playVideo();
                     } else {
-                        this.mediaModel.on('change:playAttempt', function() {
+                        this.on('change:playAttempt', function() {
                             this.playVideo();
                         }, this);
                     }
                     break;
 
                 case events.JWPLAYER_MEDIA_TIME:
-                    this.mediaModel.set('position', data.position);
-                    this.mediaModel.set('duration', data.duration);
                     this.set('position', data.position);
                     this.set('duration', data.duration);
                     break;
@@ -132,14 +91,14 @@ define([
 
                 case events.JWPLAYER_MEDIA_LEVELS:
                     this.setQualityLevel(data.currentQuality, data.levels);
-                    this.mediaModel.set('levels', data.levels);
+                    this.set('levels', data.levels);
                     break;
                 case events.JWPLAYER_MEDIA_LEVEL_CHANGED:
                     this.setQualityLevel(data.currentQuality, data.levels);
                     break;
                 case events.JWPLAYER_AUDIO_TRACKS:
                     this.setCurrentAudioTrack(data.currentTrack, data.tracks);
-                    this.mediaModel.set('audioTracks', data.tracks);
+                    this.set('audioTracks', data.tracks);
                     break;
                 case events.JWPLAYER_AUDIO_TRACK_CHANGED:
                     this.setCurrentAudioTrack(data.currentTrack, data.tracks);
@@ -147,49 +106,50 @@ define([
 
                 case 'visualQuality':
                     var visualQuality = _.extend({}, data);
-                    this.mediaModel.set('visualQuality', visualQuality);
+                    this.set('visualQuality', visualQuality);
                     break;
             }
 
             var evt = _.extend({}, data, {type: type});
-            this.mediaController.trigger(type, evt);
+            this.trigger(type, evt);
         }
 
         this.setQualityLevel = function(quality, levels){
             if (quality > -1 && levels.length > 1 && _provider.getName().name !== 'youtube') {
-                this.mediaModel.set('currentLevel', parseInt(quality));
+                this.set('currentLevel', parseInt(quality));
             }
         };
 
         this.setCurrentAudioTrack = function(currentTrack, tracks) {
             if (currentTrack > -1 && tracks.length > 1) {
-                this.mediaModel.set('currentAudioTrack', parseInt(currentTrack));
+                this.set('currentAudioTrack', parseInt(currentTrack));
             }
         };
 
-        this.changeVideoProvider = function(Provider) {
-            var container;
+        this.initProvider = function(Provider) {
 
-            if (_provider) {
-                _provider.off(null, null, this);
-                container = _provider.getContainer();
-                if (container) {
-                    _provider.remove();
-                }
+            _provider = new Provider(_this.get('id'), _this._playerModel.getConfiguration());
+
+            if (_this._playerModel.get('mediaContainer')) {
+                _provider.setContainer(_this._playerModel.get('mediaContainer'));
+            } else {
+                _this._playerModel.once('change:mediaContainer', function(model, container) {
+                    _provider.setContainer(container);
+                });
             }
 
-            _currentProvider = new Provider(_this.get('id'), _this.getConfiguration());
+            this.set('provider', _provider.getName());
 
-            if (container) {
-                _currentProvider.setContainer(container);
-            }
-
-            this.set('provider', _currentProvider.getName());
-
-            _provider = _currentProvider;
-            _provider.volume(_this.get('volume'));
-            _provider.mute(_this.get('mute'));
+            _provider.volume(_this._playerModel.get('volume'));
+            _provider.mute(_this._playerModel.get('mute'));
             _provider.on('all', _videoEventHandler, this);
+
+            _this._playerModel.on('change:mute', function(model, mute) {
+                _provider.mute(mute);
+            });
+            _this._playerModel.on('change:volume', function(model, volume) {
+                _provider.volume(volume);
+            });
         };
 
         this.destroy = function() {
@@ -204,11 +164,7 @@ define([
         };
 
         this.loadMediaItem = function(item) {
-            // Item is actually changing
-            this.mediaModel.off();
-            this.mediaModel = new MediaModel();
-            this.set('mediaModel', this.mediaModel);
-
+            this.item = item;
 
             var source = item && item.sources && item.sources[0];
             if (source === undefined) {
@@ -222,14 +178,11 @@ define([
                 throw new Error('No suitable provider found');
             }
 
-            // If we are changing video providers
-            if (!(_currentProvider instanceof Provider)) {
-                this.changeVideoProvider(Provider);
-            }
+            this.initProvider(Provider);
 
             // this allows the providers to preload
-            if (_currentProvider.init) {
-                _currentProvider.init(item);
+            if (_provider.init) {
+                _provider.init(item);
             }
 
             this.trigger('mediaItemSet');
@@ -237,54 +190,37 @@ define([
 
         // Give the option for a provider to be forced
         this.chooseProvider = function(source) {
-            return _providers.choose(source).provider;
+            return _this._playerModel.getProviders().choose(source).provider;
         };
 
         this.resetProvider = function() {
-            _currentProvider = null;
+            _provider = null;
         };
 
-        this.setVolume = function(vol) {
-            vol = Math.round(vol);
-            _this.set('volume', vol);
-            if (_provider) {
-                _provider.volume(vol);
-            }
-            var muted = (vol === 0);
-            if (muted !== _this.get('mute')) {
-                _this.setMute(muted);
-            }
-        };
+        this.loadVideo = function() {
+            this.set('playAttempt', true);
+            this.trigger(events.JWPLAYER_MEDIA_PLAY_ATTEMPT);
 
-        this.setMute = function(state) {
-            if (!utils.exists(state)) {
-                state = !_this.get('mute');
-            }
-            _this.set('mute', state);
-            if (_provider) {
-                _provider.mute(state);
-            }
-            if (!state) {
-                var volume = Math.max(10, _this.get('volume'));
-                this.setVolume(volume);
-            }
-        };
-
-        // The model is also the mediaController for now
-        this.loadVideo = function(item) {
-            this.mediaModel.set('playAttempt', true);
-            this.mediaController.trigger(events.JWPLAYER_MEDIA_PLAY_ATTEMPT);
-            if (!item) {
-                var idx = this.get('item');
-                item = this.get('playlist')[idx];
-            }
-            this.set('position', item.starttime || 0);
-            this.set('duration', item.duration || 0);
-            _provider.load(item);
+            this.set('position', this.item.starttime || this.get('position') || 0);
+            this.set('duration', this.item.duration || this.get('duration') || 0);
+            _provider.load(this.item);
         };
 
         this.playVideo = function() {
             _provider.play();
+        };
+        this.pauseVideo = function() {
+            _provider.pause();
+        };
+        this.stopVideo = function() {
+            _provider.stop();
+        };
+
+        this.seek = function(val) {
+            _provider.seek(val);
+        };
+        this.setCurrentQuality = function(val) {
+            _provider.setCurrentQuality(val);
         };
 
         this.setVideoSubtitleTrack = function(trackIndex) {
@@ -294,17 +230,13 @@ define([
                 _provider.setSubtitlesTrack(trackIndex);
             }
         };
+
+        this.setFullscreen = function(v) {
+            _provider.setFullscreen(v);
+        };
     };
 
-    // Represents the state of the provider/media element
-    var MediaModel = Model.MediaModel = function() {
-        this.set('state', states.IDLE);
-    };
-
-
-
-    _.extend(Model.prototype, SimpleModel);
     _.extend(MediaModel.prototype, SimpleModel);
 
-    return Model;
+    return MediaModel;
 });

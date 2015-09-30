@@ -5,7 +5,7 @@ define([
     'utils/underscore',
     'controller/Setup',
     'controller/captions',
-    'controller/model',
+    'controller/player-model',
     'playlist/playlist',
     'playlist/loader',
     'utils/helpers',
@@ -23,14 +23,6 @@ define([
             var args = Array.prototype.slice.call(arguments, 0);
             this.eventsQueue.push([command, args]);
         };
-    }
-
-    // The model stores a different state than the provider
-    function normalizeState(newstate) {
-        if (newstate === states.LOADING || newstate === states.STALLED) {
-            return states.BUFFERING;
-        }
-        return newstate;
     }
 
     var Controller = function(originalContainer) {
@@ -101,14 +93,6 @@ define([
                 }
             }, this);
 
-            function initMediaModel() {
-                _model.mediaModel.on('change:state', function(mediaModel, state) {
-                    var modelState = normalizeState(state);
-                    _model.set('state', modelState);
-                });
-            }
-            initMediaModel();
-            _model.on('change:mediaModel', initMediaModel);
 
             function _playerReady() {
                 _setup = null;
@@ -291,11 +275,11 @@ define([
                     }
 
                     status = utils.tryCatch(function() {
-                        _model.loadVideo();
+                        _model.getVideo().loadVideo();
                     });
                 } else if (_model.get('state') === states.PAUSED) {
                     status = utils.tryCatch(function() {
-                        _model.playVideo();
+                        _model.getVideo().playVideo();
                     });
                 }
 
@@ -316,7 +300,7 @@ define([
                 _actionOnAttach = null;
 
                 var status = utils.tryCatch(function() {
-                    _video().stop();
+                    _model.getVideo().stopVideo();
                 }, _this);
 
                 if (status instanceof utils.Error) {
@@ -349,7 +333,7 @@ define([
                     case states.PLAYING:
                     case states.BUFFERING:
                         var status = utils.tryCatch(function(){
-                            _video().pause();
+                            _model.getVideo().pauseVideo();
                         }, this);
 
                         if (status instanceof utils.Error) {
@@ -411,7 +395,8 @@ define([
                 var idx = (index + playlist.length) % playlist.length;
                 _model.set('item', idx);
                 _model.set('playlistItem', playlist[idx]);
-                _model.loadMediaItem(playlist[idx]);
+                var mc = _model.createMediaController(playlist[idx]);
+                _model.setActiveMediaController(mc);
             }
 
             function _prev() {
@@ -518,7 +503,7 @@ define([
 
             function _setCurrentCaptions(index) {
                 // update provider subtitle track
-                _model.setVideoSubtitleTrack(index);
+                _model.getVideo().setVideoSubtitleTrack(index);
 
                 _this.trigger(events.JWPLAYER_CAPTIONS_CHANGED, {
                     tracks: _getCaptionsList(),
@@ -597,8 +582,30 @@ define([
             this.getState = _getState;
 
             // Model passthroughs
-            this.setVolume = _model.setVolume;
-            this.setMute = _model.setMute;
+            this.setVolume = function(vol) {
+                vol = Math.round(vol);
+
+                _model.set('volume', vol);
+
+                var muted = (vol === 0);
+                if (muted !== _model.get('mute')) {
+                    _this.setMute(muted);
+                }
+            };
+
+            this.setMute = function(state) {
+                if (!_.isBoolean(state)) {
+                    state = !_model.get('mute');
+                }
+
+                _model.set('mute', state);
+
+                if (!state) {
+                    var volume = Math.max(10, _model.get('volume'));
+                    this.setVolume(volume);
+                }
+            };
+
             this.getProvider = function(){ return _model.get('provider'); };
             this.getWidth = function() { return _model.get('containerWidth'); };
             this.getHeight = function() { return _model.get('containerHeight'); };

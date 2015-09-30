@@ -360,13 +360,7 @@ define([
             _userActivity();
 
             // adds video tag to video layer
-            if (_model.getVideo()) {
-                _model.getVideo().setContainer(_videoLayer);
-            } else {
-                _model.once('mediaItemSet', function() {
-                    _model.getVideo().setContainer(_videoLayer);
-                });
-            }
+            _model.set('mediaContainer', _videoLayer);
 
             // Native fullscreen (coming through from the provider)
             _model.mediaController.on('fullscreenchange', _fullscreenChangeHandler);
@@ -632,7 +626,7 @@ define([
         var _fullscreen = function(model, state) {
 
             // If it supports DOM fullscreen
-            var provider = _model.getVideo();
+            var mc = _model.getVideo();
             if (_elementSupportsFullscreen) {
                 if (state) {
                     _requestFullscreen.apply(_playerElement);
@@ -648,13 +642,15 @@ define([
                     if (_instreamModel && _instreamModel.getVideo()) {
                        _instreamModel.getVideo().setFullscreen(state);
                     }
-                    provider.setFullscreen(state);
+                    mc.setFullscreen(state);
                 }
             }
+
             // pass fullscreen state to Flash provider
             // provider.getName() is the same as _api.getProvider() or _model.get('provider')
+            var provider = model.get('provider');
             if (provider && provider.getName().name.indexOf('flash') === 0) {
-                provider.setFullscreen(state);
+                mc.setFullscreen(state);
             }
         };
 
@@ -755,7 +751,8 @@ define([
             if (!provider) {
                 return;
             }
-            var transformScale = provider.resize(width, height, _model.get('stretching'));
+            var media = provider.getVideo();
+            var transformScale = media.resize(width, height, _model.get('stretching'));
 
             // poll resizing if video is transformed
             if (transformScale) {
@@ -955,10 +952,10 @@ define([
             this.setAltText('');
             utils.removeClass(_playerElement, 'jw-flag-ads');
             utils.removeClass(_playerElement, 'jw-flag-ads-hide-controls');
-            if (_model.getVideo) {
-                var provider = _model.getVideo();
-                provider.setContainer(_videoLayer);
-            }
+            //if (_model.getVideo) {
+                //var provider = _model.getVideo();
+                //provider.setContainer(_videoLayer);
+            //}
             _setLiveMode(_model, _model.get('duration'));
             // reset display click handler
             _displayClickHandler.revertAlternateClickHandlers();

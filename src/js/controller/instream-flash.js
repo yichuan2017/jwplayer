@@ -1,6 +1,6 @@
 define([
     'utils/backbone.events',
-    'controller/model',
+    'controller/player-model',
     'events/change-state-event',
     'events/events',
     'events/states',
