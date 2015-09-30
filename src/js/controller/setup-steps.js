@@ -131,7 +131,6 @@ define([
         _model.set('playlist', playlist);
         _model.set('item', 0);
         _model.set('playlistItem', playlist[0]);
-        _model.loadMediaItem(playlist[0]);
     }
 
     function _completePlaylist(resolve, _model, playlist) {
@@ -227,6 +226,8 @@ define([
     }
 
     function _setupComponents(resolve, _model, _api, _view) {
+        var playlist = _model.get('playlist');
+        _model.loadMediaItem(playlist[0]);
         _view.setup();
         resolve();
     }

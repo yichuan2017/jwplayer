@@ -36,7 +36,7 @@ define([
         };
 
         /** Load an instream item and initialize playback **/
-        _this.load = function(item) {
+        this.load = function(/*item*/) {
             // Make sure it chooses a provider
             //_adModel.setPlaylist([item]);
             //_adModel.setItem(0);
