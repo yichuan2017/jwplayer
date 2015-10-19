@@ -15,7 +15,7 @@ define([
         _isMobile = utils.isMobile(),
         _isSafari = utils.isSafari(),
         _isAndroid = utils.isAndroidNative(),
-        _isIOS7 = utils.isIOS(7),
+        //_isIOS7 = utils.isIOS(7),
         _name = 'html5';
 
 
@@ -140,13 +140,6 @@ define([
         _videotag.className = 'jw-video jw-reset';
 
         _setupListeners(_mediaEvents, _videotag);
-
-
-        // Workaround for a Safari bug where video disappears on switch to fullscreen
-        if (!_isIOS7) {
-            _videotag.controls = true;
-            _videotag.controls = false;
-        }
 
         // Enable AirPlay
         _videotag.setAttribute('x-webkit-airplay', 'allow');
