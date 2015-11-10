@@ -89,6 +89,9 @@ define([
             }
         } else if(_useMouseEvents){
             elem.addEventListener('mousedown', interactStartHandler);
+            elem.addEventListener('click', function(){
+                console.log('Clicked', elem.className);
+            });
             if(options.useHover) {
                 elem.addEventListener('mouseover', overHandler);
                 elem.addEventListener('mouseout', outHandler);
@@ -118,6 +121,8 @@ define([
             _startX = getCoord(evt, 'X');
             _startY = getCoord(evt, 'Y');
 
+            console.log('MouseDown', elem.className);
+
             if(!isRightClick(evt)){
                 if(_usePointerEvents){
                     if(evt.isPrimary){
@@ -144,6 +149,8 @@ define([
             var touchEvents = events.touchEvents;
             var movementThreshhold = 6;
 
+            console.log('MouseMove', elem.className);
+
             if (_hasMoved) {
                 triggerEvent(touchEvents.DRAG, evt);
             } else {
@@ -166,6 +173,8 @@ define([
 
         function interactEndHandler(evt) {
             var touchEvents = events.touchEvents;
+
+            console.log('MouseUp', elem.className);
 
             if(_usePointerEvents) {
                 if (options.preventScrolling) {
