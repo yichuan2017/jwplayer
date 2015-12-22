@@ -868,6 +868,10 @@ define([
                 style.margin  = 0;
                 cssUtils.transform(_videotag,
                     'translate(' + x + 'px, ' + y + 'px) scale(' + scaleX.toFixed(2) + ', ' + scaleY.toFixed(2) + ')');
+                // translate position of text track to compensate for container scaling
+                cssUtils.css('#'+ _playerId +' video::-webkit-media-text-track-container', {
+                    transform: 'scale(' + (1/scaleX).toFixed(2) + ', ' + (1/scaleY).toFixed(2) + ')'
+                });
             }
             cssUtils.style(_videotag, style);
             return false;
