@@ -52,11 +52,11 @@ define([
         return out;
     };
     
-    id3Parser.utf16BigEndianArrayToStr = function (array, startingIndex) {
+    id3Parser.utf16BigEndianArrayToStr = function (array, startingIndex, arrayLength) {
         var out, i, lastDoubleByte;
     
         out = '';
-        lastDoubleByte = array.length - 1;
+        lastDoubleByte = arrayLength - 1 || array.length - 1;
         i = startingIndex || 0;
         while (i < lastDoubleByte) {
             if (array[i] === 254 && array[i + 1] === 255) {
@@ -126,7 +126,7 @@ define([
                             }
                         }
                     }
-    
+
                     if (infoDelimiterPosition > 0) {
                         var info = id3Parser.utf8ArrayToStr(
                             array.subarray(startPos, startPos += infoDelimiterPosition), 0);
@@ -135,25 +135,26 @@ define([
                                 var pts_33_bit =  id3Parser.syncSafeInt(
                                         array.subarray(startPos, startPos += 4)) & 0x00000001;
                                 var transportStreamTimestamp =  id3Parser.syncSafeInt(
-                                    array.subarray(startPos, startPos += 4));
+                                    array.subarray(startPos, startPos + 4));
                                 if (pts_33_bit) {
                                     transportStreamTimestamp += 0x100000000;
                                 }
                                 cue.value.data = transportStreamTimestamp;
                             } else {
-                                cue.value.data = id3Parser.utf8ArrayToStr(array, startPos + 1);
+                                cue.value.data = id3Parser.utf8ArrayToStr(array.subarray(startPos + 1, arrayLength), 0);
                             }
                             cue.value.info = info;
                         } else {
                             cue.value.info = info;
-                            cue.value.data = id3Parser.utf8ArrayToStr(array, startPos + 1);
+                            cue.value.data = id3Parser.utf8ArrayToStr(array.subarray(startPos + 1, arrayLength), 0);
                         }
                     } else {
                         var encoding = array[startPos];
                         if (encoding === 1 || encoding === 2) {
-                            cue.value.data = id3Parser.utf16BigEndianArrayToStr(array, startPos + 1);
+                            cue.value.data = id3Parser.utf16BigEndianArrayToStr(
+                                array.subarray(startPos + 1, arrayLength), 0);
                         } else {
-                            cue.value.data = id3Parser.utf8ArrayToStr(array, startPos + 1);
+                            cue.value.data = id3Parser.utf8ArrayToStr(array.subarray(startPos + 1, arrayLength), 0);
                         }
                     }
                 }
