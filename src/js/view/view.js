@@ -106,7 +106,7 @@ define([
         function _applyStyles() {
             var pollTarget = utils.createElement(
                 '<span ' +
-                    'class="jw-font-load-detect jw-reset" ' +
+                    'class="jw-reset" ' +
                     'style="position: absolute; visibility: hidden; display: inline-block"' +
                 '>' +
                     '&#xe614&#xe614&#xe614' +
