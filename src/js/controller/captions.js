@@ -243,6 +243,7 @@ define([
                     if (track.data.length) {
                         _addTrack(track);
                         _this.setCaptionsList(_captionsMenu());
+                        _selectDefaultIndex();
                     }
                 });
             }
