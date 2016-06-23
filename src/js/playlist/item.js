@@ -1,8 +1,9 @@
 define([
     'utils/underscore',
+    'utils/parser',
     'playlist/source',
     'playlist/track'
-], function(_, Source, Track) {
+], function(_, Parser, Source, Track) {
 
     var Defaults = {
         //description: undefined,
@@ -66,6 +67,7 @@ define([
         }
 
         _playlistItem.tracks = _.compact(_.map(_playlistItem.tracks, Track));
+        _playlistItem.mediaid = _playlistItem.mediaid || Parser.getMediaId(_playlistItem.file);
 
         return _playlistItem;
     };

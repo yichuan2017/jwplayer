@@ -137,6 +137,12 @@ define([
         return prefix + (hrs ? hrs + ':' : '') + (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
     };
 
+    parser.getMediaId = function(url) {
+        var regex = /.*\/(?:manifests|videos)\/([a-zA-Z0-9]{8})[\.-].*/;
+        var mediaId = regex.exec(url);
+        return (mediaId && (mediaId.length === 2)) ? mediaId[1] : null;
+    };
+
     /**
      * Determine the adaptive type
      */
