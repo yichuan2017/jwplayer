@@ -150,9 +150,11 @@ define([
         },
         onReady: function() {
             this._related = this._api.getPlugin('related');
-            // Only switch to related mode if there is a related playlist
-            this._related.on('playlist', this.onRelatedPlaylist.bind(this));
-            this._related.on('cached', this.onRelatedCached.bind(this));
+            if (this._related) {
+                // Only switch to related mode if there is a related playlist
+                this._related.on('playlist', this.onRelatedPlaylist.bind(this));
+                this._related.on('cached', this.onRelatedCached.bind(this));
+            }
         },
         onPlaylist: function(model, playlist) {
             this._playlist = playlist;
