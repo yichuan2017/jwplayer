@@ -15,14 +15,14 @@ define([
 
         // Listen for player resize events
         _controller.on(events.JWPLAYER_FULLSCREEN, function(data) {
-            this.trigger(events.JWPLAYER_FULLSCREEN, data);
-        }, _this);
+            _this.trigger(events.JWPLAYER_FULLSCREEN, data);
+        });
 
         /*****************************************
          *****  Public instream API methods  *****
          *****************************************/
 
-        this.init = function() {
+        _this.init = function() {
             // Initialize the instream player's model copied from main player's model
             _adModel = new Model().setup({
                 id: _model.get('id'),
@@ -33,7 +33,7 @@ define([
             });
             _adModel.on('fullscreenchange', _nativeFullscreenHandler);
 
-            this._adModel = _adModel;
+            _this._adModel = _adModel;
         };
 
         /** Load an instream item and initialize playback **/
@@ -50,8 +50,8 @@ define([
             // Match the main player's controls state
             _adModel.off(events.JWPLAYER_ERROR);
             _adModel.on(events.JWPLAYER_ERROR, function(data) {
-                this.trigger(events.JWPLAYER_ERROR, data);
-            }, _this);
+                _this.trigger(events.JWPLAYER_ERROR, data);
+            });
 
             // Load the instream item
             _adModel.loadVideo(item);
@@ -64,18 +64,23 @@ define([
             // Match the main player's controls state
             provider.off(events.JWPLAYER_ERROR);
             provider.on(events.JWPLAYER_ERROR, function(data) {
-                this.trigger(events.JWPLAYER_ERROR, data);
-            }, _this);
+                _this.trigger(events.JWPLAYER_ERROR, data);
+            });
             _model.on('change:volume', function(data, value) {
                 _currentProvider.volume(value);
-            }, _this);
+            });
             _model.on('change:mute', function(data, value) {
                 _currentProvider.mute(value);
-            }, _this);
+            });
+        };
+
+        _this.updateVolume = function(provider){
+            provider.volume(_model.get('volume'));
+            provider.mute(_model.get('mute'));
         };
 
         /** Stop the instream playback and revert the main player back to its original state **/
-        this.instreamDestroy = function() {
+        _this.instreamDestroy = function() {
             if (!_adModel) {
                 return;
             }
@@ -83,7 +88,7 @@ define([
             _adModel.off();
 
             // We don't want the instream provider to be attached to the video tag anymore
-            this.off();
+            _this.off();
             if (_currentProvider) {
                 _currentProvider.detachMedia();
                 _currentProvider.off();
@@ -96,7 +101,8 @@ define([
             _adModel = null;
 
             // Remove all callbacks for 'this' for all events
-            _controller.off(null, null, this);
+            _model.off(null, null, _this);
+            _controller.off(null, null, _this);
             _controller = null;
         };
 
@@ -135,15 +141,14 @@ define([
 
                 provider.on('all', function(type, data) {
                     data = _.extend({}, data, {type: type});
-                    this.trigger(type, data);
-                }, _this);
+                    _this.trigger(type, data);
+                });
 
                 provider.on(events.JWPLAYER_MEDIA_BUFFER_FULL, _bufferFullHandler);
 
                 provider.on(events.JWPLAYER_PLAYER_STATE, stateHandler);
                 provider.attachMedia();
-                provider.volume(_model.get('volume'));
-                provider.mute(_model.get('mute'));
+                _this.updateVolume(provider);
 
                 _adModel.on('change:state', changeStateEvent, _this);
             }

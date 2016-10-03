@@ -237,6 +237,10 @@ define([
             this.addClickHandler();
         };
 
+        this.updateVolume = function(provider){
+            _instream.updateVolume(provider);
+        };
+
         this.play = function() {
             _instream.instreamPlay();
         };

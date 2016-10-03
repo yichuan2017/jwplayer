@@ -65,22 +65,26 @@ define([
             }, this);
 
             this.swf.triggerFlash('instream:init');
+        },
 
-            this.applyProviderListeners = function(provider){
-                this.model.on('change:volume', function(data, value) {
-                    provider.volume(value);
-                }, this);
-                this.model.on('change:mute', function(data, value) {
-                    provider.mute(value);
-                }, this);
+        applyProviderListeners: function(provider){
+            this.model.on('change:volume', function(data, value) {
+                provider.volume(value);
+            }, this);
+            this.model.on('change:mute', function(data, value) {
+                provider.mute(value);
+            }, this);
 
-                provider.volume(this.model.get('volume'));
-                provider.mute(this.model.get('mute'));
+            this.updateVolume(provider);
 
-                // update admodel state when set from from googima
-                provider.off();
-                provider.on(events.JWPLAYER_PLAYER_STATE, this.stateHandler, this);
-            };
+            // update admodel state when set from from googima
+            provider.off();
+            provider.on(events.JWPLAYER_PLAYER_STATE, this.stateHandler, this);
+        },
+
+        updateVolume: function(provider) {
+            provider.volume(this.model.get('volume'));
+            provider.mute(this.model.get('mute'));
         },
 
         stateHandler: function(evt) {
@@ -106,6 +110,7 @@ define([
             this._adModel.off();
             this._adModel = null;
 
+            this.model.off(null, null, this);
             this.model = null;
         },
 
