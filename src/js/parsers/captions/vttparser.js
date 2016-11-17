@@ -173,7 +173,7 @@ define(['parsers/captions/vttcue'], function(VTTCue) {
                         vals = v.split(',');
                         settings.percent(k, vals[0]);
                         if (vals.length === 2) {
-                            settings.alt('positionAlign', vals[1], ['line-left', 'center', 'line-right', 'auto']);
+                            settings.alt('positionAlign', vals[1], ['start', 'center', 'end']);
                         }
                         break;
                     case 'size':
@@ -193,8 +193,20 @@ define(['parsers/captions/vttcue'], function(VTTCue) {
             cue.snapToLines = settings.get('snapToLines', true);
             cue.size = settings.get('size', 100);
             cue.align = settings.get('align', 'center');
-            cue.position = settings.get('position', 'auto');
-            cue.positionAlign = settings.get('positionAlign', 'auto');
+            cue.position = settings.get('position', {
+                start: 0,
+                left: 0,
+                center: 50,
+                end: 100,
+                right: 100
+            }, cue.align);
+            cue.positionAlign = settings.get('positionAlign', {
+                start: 'start',
+                left: 'start',
+                center: 'center',
+                end: 'end',
+                right: 'end'
+            }, cue.align);
         }
 
         function skipWhitespace() {
