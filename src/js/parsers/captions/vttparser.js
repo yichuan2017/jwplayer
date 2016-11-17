@@ -193,13 +193,7 @@ define(['parsers/captions/vttcue'], function(VTTCue) {
             cue.snapToLines = settings.get('snapToLines', true);
             cue.size = settings.get('size', 100);
             cue.align = settings.get('align', 'middle');
-            cue.position = settings.get('position', {
-                start: 0,
-                left: 0,
-                middle: 50,
-                end: 100,
-                right: 100
-            }, cue.align);
+            cue.position = settings.get('position', 'auto', cue.align);
             cue.positionAlign = settings.get('positionAlign', {
                 start: 'start',
                 left: 'start',
