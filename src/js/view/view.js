@@ -1171,13 +1171,14 @@ define([
             return _playerElement;
         };
 
-        this.getSafeRegion = function(includeCB) {
+        this.getSafeRegion = function(includeCB, includeTimeSliderAbove) {
             var bounds = {
                 x: 0,
                 y: 0,
                 width : _model.get('containerWidth') || 0,
                 height : _model.get('containerHeight') || 0
             };
+            includeTimeSliderAbove = includeTimeSliderAbove === true;
 
             // If we are using a dock, subtract that from the top
             var dockButtons = _model.get('dock');
@@ -1189,7 +1190,12 @@ define([
             // Subtract controlbar from the bottom when using one
             includeCB = includeCB || !utils.exists(includeCB);
             if (includeCB && _model.get('controls')) {
-                bounds.height -= _controlbar.element().clientHeight;
+                if (includeTimeSliderAbove) {
+                    bounds.height -= _controlbar.element().clientHeight;
+                } else {
+                    // _controlbar.elements.right is visible in currently used display modes.
+                    bounds.height -= _controlbar.elements.right.clientHeight;
+                }
             }
 
             return bounds;
