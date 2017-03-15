@@ -18,7 +18,9 @@ define([
             }
             var el = document.createElement('div');
 
-            // TODO: Add warning if any styles have !important, since they will be stripped out here.
+            // if any of the styles include !important,
+            // those styles will be ignored and will not
+            // be included in cssText
             _style(el, styles);
             cssText = '{' + el.style.cssText + '}';
         } else if (typeof styles === 'string') {

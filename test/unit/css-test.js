@@ -11,15 +11,19 @@ define([
         var count = document.getElementsByTagName('style').length;
 
         var testSelector = 'test-selector';
+        var stylesBlueImportant = {
+            backgroundColor: 'blue !important'
+        };
+
         var stylesBlue = {
-            'background-color': 'blue'
+            backgroundColor: 'blue'
         };
 
         var stylesRed = {
             backgroundColor: 'red'
         };
 
-        css.css(testSelector, stylesBlue, playerId);
+        css.css(testSelector, stylesBlueImportant, playerId);
 
         // check that css.css accepts a style object and that a new style sheet has been added since
         // this is the first time calling css.css.
@@ -28,10 +32,11 @@ define([
 
         // check that style sheet is correctly included to the end of head
         var styleSheet = document.getElementsByTagName('head')[0].lastChild;
-        assert.ok(/test-selector{background-color: ?blue;?}/.test(styleSheet.innerHTML),
-            'css object correctly included');
+        assert.ok(/test-selector{}/.test(styleSheet.innerHTML),
+            'css object strips styles with !important');
 
         // check that css.css accepts a style object and css will be replaced
+        css.css(testSelector, stylesBlue, playerId);
         css.css(testSelector, stylesRed, playerId);
         assert.ok(!/test-selector{background-color: ?blue;?}/.test(styleSheet.innerHTML),
             'css object correctly replaced');
@@ -44,6 +49,10 @@ define([
         assert.ok(!/test-selector{background-color: ?red;?}/.test(styleSheet.innerHTML), 'css correctly removed');
 
         // check that css.css accepts css style as a string
+        css.css(testSelector, '{test-selector{background-color: blue !important}', playerId);
+        assert.ok(/test-selector{background-color: ?blue !important;?}/.test(styleSheet.innerHTML),
+            'css text correctly inserted');
+
         css.css(testSelector, '{test-selector{background-color: blue}', playerId);
         assert.ok(/test-selector{background-color: ?blue;?}/.test(styleSheet.innerHTML),
             'css text correctly inserted');
