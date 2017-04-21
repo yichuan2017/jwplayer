@@ -632,6 +632,8 @@ define([
         this.width = obj.width || width;
         this.lineHeight = lh !== undefined ? lh : obj.lineHeight;
 
+        this.width = Math.ceil(this.width + 1);
+
         if (isIE8 && !this.lineHeight) {
             this.lineHeight = 13;
         }
