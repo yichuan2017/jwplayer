@@ -3,13 +3,12 @@ import { qualityLevel } from 'providers/data-normalizer';
 define([
     'utils/helpers',
     'utils/underscore',
-    'events/events',
     'events/states',
     'utils/embedswf',
     'providers/default',
     'utils/backbone.events',
     'providers/tracks-mixin'
-], function(utils, _, events, states, EmbedSwf, DefaultProvider, Events, Tracks) {
+], function(utils, _, states, EmbedSwf, DefaultProvider, Events, Tracks) {
     var _providerId = 0;
     function getObjectId(playerId) {
         return playerId + '_swf_' + (_providerId++);
@@ -197,7 +196,7 @@ define([
                     if (result === _swf) {
                         _swf.__ready = true;
                     } else {
-                        this.trigger(events.JWPLAYER_MEDIA_ERROR, result);
+                        this.trigger('mediaError', result);
                     }
 
                         // init if _item is defined
@@ -207,106 +206,78 @@ define([
 
                 }, this);
 
-                var forwardEventsWithData = [
-                    events.JWPLAYER_MEDIA_ERROR,
-                    events.JWPLAYER_MEDIA_SEEK,
-                    events.JWPLAYER_MEDIA_SEEKED,
-                    'subtitlesTrackChanged',
-                    'mediaType'
-                ];
-
-                var forwardEventsWithDataDuration = [
-                    events.JWPLAYER_MEDIA_BUFFER,
-                    events.JWPLAYER_MEDIA_TIME
-                ];
-
-                var forwardEvents = [
-                    events.JWPLAYER_MEDIA_BUFFER_FULL
-                ];
-
                     // jwplayer 6 flash player events (forwarded from AS3 Player, Controller, Model)
-                _swf.on([events.JWPLAYER_MEDIA_LEVELS, events.JWPLAYER_MEDIA_LEVEL_CHANGED].join(' '), function(e) {
-                    _updateLevelsEvent(e);
-                    this.trigger(e.type, e);
-                }, this);
-
-                _swf.on(events.JWPLAYER_AUDIO_TRACKS, function(e) {
-                    _currentAudioTrack = e.currentTrack;
-                    _audioTracks = e.tracks;
-                    this.trigger(e.type, e);
-                }, this);
-
-                _swf.on(events.JWPLAYER_AUDIO_TRACK_CHANGED, function(e) {
-                    _currentAudioTrack = e.currentTrack;
-                    _audioTracks = e.tracks;
-                    this.trigger(e.type, e);
-                }, this);
-
-                _swf.on(events.JWPLAYER_PLAYER_STATE, function(e) {
-                    var state = e.newstate;
-                    if (state === states.IDLE) {
-                        return;
-                    }
-                    this.setState(state);
-                }, this);
-
-                _swf.on(forwardEventsWithDataDuration.join(' '), function(e) {
-                    if (e.duration === 'Infinity') {
-                        e.duration = Infinity;
-                    }
-                    this.trigger(e.type, e);
-                }, this);
-
-                _swf.on(forwardEventsWithData.join(' '), function(e) {
-                    this.trigger(e.type, e);
-                }, this);
-
-                _swf.on(forwardEvents.join(' '), function(e) {
-                    this.trigger(e.type);
-                }, this);
-
-                _swf.on(events.JWPLAYER_MEDIA_BEFORECOMPLETE, function() {
-                    this.trigger(events.JWPLAYER_MEDIA_COMPLETE);
-                }, this);
-
-                _swf.on('visualQuality', function(e) {
-                        // Get index from sorted levels from the level's index + 1 to take Auto into account
-                    var sortedIndex = 0;
-                    if (_qualityLevels.length > 1) {
-                        sortedIndex = _getSortedIndex(_qualityLevels, e.level.index + 1);
-                    }
-                        // Use extend so that the actual level's index is not modified
-                    e.level = _.extend(e.level, { index: sortedIndex });
-                    e.reason = e.reason || 'api'; // or 'user selected';
-                    this.trigger('visualQuality', e);
-                    this.trigger('providerFirstFrame', {});
-                }, this);
-
-                _swf.on(events.JWPLAYER_PROVIDER_CHANGED, function(e) {
-                    _flashProviderType = e.message;
-                    this.trigger(events.JWPLAYER_PROVIDER_CHANGED, e);
-                }, this);
-
-                _swf.on(events.JWPLAYER_ERROR, function(event) {
-                    this.trigger(events.JWPLAYER_MEDIA_ERROR, event);
-                }, this);
-
-                _swf.on('subtitlesTracks', function(e) {
-                    this.addTextTracks(e.tracks);
-                }, this);
-
-                _swf.on('subtitlesTrackData', function(e) {
-                    this.addCuesToTrack(e);
-                }, this);
-
-                _swf.on(events.JWPLAYER_MEDIA_META, function(e) {
-                    if (!e) {
-                        return;
-                    }
-                    if (e.metadata && e.metadata.type === 'textdata') {
-                        this.addCaptionsCue(e.metadata);
-                    } else {
+                _swf.on({
+                    'levels levelsChanged': function(e) {
+                        _updateLevelsEvent(e);
                         this.trigger(e.type, e);
+                    },
+                    audioTracks: function(e) {
+                        _currentAudioTrack = e.currentTrack;
+                        _audioTracks = e.tracks;
+                        this.trigger(e.type, e);
+                    },
+                    audioTrackChanged: function(e) {
+                        _currentAudioTrack = e.currentTrack;
+                        _audioTracks = e.tracks;
+                        this.trigger(e.type, e);
+                    },
+                    state: function(e) {
+                        var state = e.newstate;
+                        if (state === states.IDLE) {
+                            return;
+                        }
+                        this.setState(state);
+                    },
+                    'bufferChange time': function(e) {
+                        if (e.duration === 'Infinity') {
+                            e.duration = Infinity;
+                        }
+                        this.trigger(e.type, e);
+                    },
+                    'mediaError seek seeked subtitlesTrackChanged mediaType': function(e) {
+                        this.trigger(e.type, e);
+                    },
+                    bufferFull: function(e) {
+                        this.trigger(e.type);
+                    },
+                    beforeComplete: function() {
+                        this.trigger('complete');
+                    },
+                    visualQuality: function(e) {
+                        // Get index from sorted levels from the level's index + 1 to take Auto into account
+                        var sortedIndex = 0;
+                        if (_qualityLevels.length > 1) {
+                            sortedIndex = _getSortedIndex(_qualityLevels, e.level.index + 1);
+                        }
+                        // Use extend so that the actual level's index is not modified
+                        e.level = _.extend(e.level, { index: sortedIndex });
+                        e.reason = e.reason || 'api'; // or 'user selected';
+                        this.trigger('visualQuality', e);
+                        this.trigger('providerFirstFrame', {});
+                    },
+                    providerChanged: function(e) {
+                        _flashProviderType = e.message;
+                        this.trigger('providerChanged', e);
+                    },
+                    error: function(event) {
+                        this.trigger('mediaError', event);
+                    },
+                    subtitlesTracks: function(e) {
+                        this.addTextTracks(e.tracks);
+                    },
+                    subtitlesTrackData: function(e) {
+                        this.addCuesToTrack(e);
+                    },
+                    meta: function(e) {
+                        if (!e) {
+                            return;
+                        }
+                        if (e.metadata && e.metadata.type === 'textdata') {
+                            this.addCaptionsCue(e.metadata);
+                        } else {
+                            this.trigger(e.type, e);
+                        }
                     }
                 }, this);
 
