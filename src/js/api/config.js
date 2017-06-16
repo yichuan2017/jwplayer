@@ -48,6 +48,7 @@ define([
             nextUpClose: 'Next Up Close',
             related: 'Discover',
             close: 'Close',
+            preload: 'meta'
         },
         renderCaptionsNatively: true,
         nextUpDisplay: true
@@ -150,8 +151,7 @@ define([
                 'image',
                 'file',
                 'sources',
-                'tracks',
-                'preload'
+                'tracks'
             ]);
 
             config.playlist = [ obj ];
@@ -161,11 +161,21 @@ define([
             config.playlist = configPlaylist.playlist;
         }
 
+        if (_.size(config.playlist)) {
+            config.playlist[0].preload = normalizePreload(config);
+        }
+
         config.qualityLabels = config.qualityLabels || config.hlslabels;
 
         return config;
     };
 
+    function normalizePreload(config) {
+        const preloadValues = ['none', 'meta', 'auto'];
+        const preload = config.playlist[0].preload || config.preload;
+
+        return _.contains(preloadValues, preload) ? preload : 'meta';
+    }
 
     function _evaluateAspectRatio(ar, width) {
         if (width.toString().indexOf('%') === -1) {

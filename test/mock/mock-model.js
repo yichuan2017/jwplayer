@@ -130,6 +130,7 @@ define([
                 ],
                 config: {},
                 sdkplatform: false,
+                preload: 'meta'
             }, configuration);
 
 

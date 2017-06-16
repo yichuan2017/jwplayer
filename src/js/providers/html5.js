@@ -482,7 +482,7 @@ define([
                 // Playback rate is broken on Android HLS
                 _this.supportsPlaybackRate = false;
             }
-            if (source.preload && source.preload !== _videotag.getAttribute('preload')) {
+            if (source.preload !== _videotag.getAttribute('preload')) {
                 _setAttribute('preload', source.preload);
             }
 
