@@ -48,7 +48,7 @@ define([
             nextUpClose: 'Next Up Close',
             related: 'Discover',
             close: 'Close',
-            preload: 'meta'
+            preload: 'metadata'
         },
         renderCaptionsNatively: true,
         nextUpDisplay: true
@@ -171,10 +171,10 @@ define([
     };
 
     function normalizePreload(config) {
-        const preloadValues = ['none', 'meta', 'auto'];
+        const preloadValues = ['none', 'metadata', 'auto'];
         const preload = config.playlist[0].preload || config.preload;
 
-        return _.contains(preloadValues, preload) ? preload : 'meta';
+        return _.contains(preloadValues, preload) ? preload : 'metadata';
     }
 
     function _evaluateAspectRatio(ar, width) {

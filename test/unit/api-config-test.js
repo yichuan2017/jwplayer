@@ -141,16 +141,16 @@ define([
         describe('preload', function() {
             it('should default to meta when not set', function() {
                 expect(new Config({}).playlist[0].preload)
-                    .to.equal('meta');
+                    .to.equal('metadata');
             });
 
             it('should default to meta for invalid values in top level', function() {
                 expect(new Config({ preload: 'invalid' }).playlist[0].preload)
-                    .to.equal('meta');
+                    .to.equal('metadata');
                 expect(new Config({ preload: undefined }).playlist[0].preload)
-                    .to.equal('meta');
+                    .to.equal('metadata');
                 expect(new Config({ preload: 100 }).playlist[0].preload)
-                    .to.equal('meta');
+                    .to.equal('metadata');
             });
 
             it('should be none in item when set in top level', function() {
@@ -159,8 +159,8 @@ define([
             });
 
             it('should be meta in item when set in top level', function() {
-                expect(new Config({ preload: 'meta' }).playlist[0].preload)
-                    .to.equal('meta');
+                expect(new Config({ preload: 'metadata' }).playlist[0].preload)
+                    .to.equal('metadata');
             });
 
             it('should be auto in item when set in top level', function() {
@@ -172,14 +172,14 @@ define([
                 expect(new Config({
                     preload: 'invalid',
                     playlist: [{}]
-                }).playlist[0].preload).to.equal('meta');
+                }).playlist[0].preload).to.equal('metadata');
                 expect(new Config({
                     preload: undefined,
                     playlist: [{}]
-                }).playlist[0].preload).to.equal('meta');
+                }).playlist[0].preload).to.equal('metadata');
                 expect(new Config({
                     preload: 100
-                }).playlist[0].preload).to.equal('meta');
+                }).playlist[0].preload).to.equal('metadata');
             });
 
             it('should override config in first item over top level', function() {
@@ -193,7 +193,7 @@ define([
 
             it('should be meta when invalid in first playlist item', function() {
                 expect(new Config({ preload: 'non' }).playlist[0].preload)
-                    .to.equal('meta');
+                    .to.equal('metadata');
             });
 
             it('should be none when set in first playlist item', function() {
@@ -204,9 +204,9 @@ define([
             it('should be meta when set in first playlist item', function() {
                 expect(new Config({
                     playlist: [{
-                        preload: 'meta'
+                        preload: 'metadata'
                     }]
-                }).playlist[0].preload).to.equal('meta');
+                }).playlist[0].preload).to.equal('metadata');
             });
 
             it('should be auto when set in first playlist item', function() {
