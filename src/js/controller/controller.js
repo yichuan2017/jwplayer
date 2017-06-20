@@ -283,6 +283,19 @@ define([
                     viewable: viewable
                 });
                 _checkPlayOnViewable(model, viewable);
+                _checkPreload(model, viewable);
+            }
+
+            function _checkPreload(model, viewable) {
+                const provider = _video();
+                const shouldPreload =
+                    viewable === 1 &&
+                    provider.preload &&
+                    !provider.preloaded;
+
+                if (shouldPreload) {
+                    provider.preload();
+                }
             }
 
             function _checkPlayOnViewable(model, viewable) {

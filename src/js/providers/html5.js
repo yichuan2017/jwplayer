@@ -482,9 +482,7 @@ define([
                 // Playback rate is broken on Android HLS
                 _this.supportsPlaybackRate = false;
             }
-            if (source.preload && source.preload !== _videotag.getAttribute('preload')) {
-                _setAttribute('preload', source.preload);
-            }
+            _this.preload(source);
 
             var sourceElement = document.createElement('source');
             sourceElement.src = source.file;
@@ -569,6 +567,13 @@ define([
             _visualQuality.reason = '';
             _setVideotagSource(_levels[_currentQuality]);
             this.setupSideloadedTracks(item.tracks);
+        };
+
+        this.preload = function(item) {
+            if (item.preload !== _videotag.getAttribute('preload')) {
+                _setAttribute('preload', item.preload);
+            }
+            this.preloaded = true;
         };
 
         this.load = function(item) {
