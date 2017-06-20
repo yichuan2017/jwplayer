@@ -15,14 +15,26 @@ const aliases = {
 
 webpackConfig.resolve.alias = Object.assign(webpackConfig.resolve.alias || {}, aliases);
 
+webpackConfig.module.rules = [{
+    test: /\.js$/,
+    include: /(src)\/(js)\//,
+    loader: 'istanbul-instrumenter-loader'
+}];
+
+webpackConfig.module.postLoaders = [{
+    test: /\.js$/,
+    include: /(src)\/(js)\//,
+    exclude: /(test|node_modules)\//,
+    loader: 'istanbul-instrumenter-loader'
+}];
+
 module.exports = function(config) {
     var env = process.env;
     var isJenkins = !!process.env.JENKINS_HOME;
     var serverPort = process.env.KARMA_PORT || 9876;
     var testReporters = [
-        // 'dots', // useful for writing browser console logs to stdio
-        'spec',
-        'coverage'
+        'mocha',
+        'coverage-istanbul'
     ];
     if (isJenkins) {
         testReporters.push('junit');
@@ -83,13 +95,15 @@ module.exports = function(config) {
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
-            'test-context.js': ['webpack']
+            'test-context.js': ['webpack'],
         },
 
-        coverageReporter: {
-            type: 'html',
-            dir: 'reports/coverage'
+        coverageIstanbulReporter: {
+            reports: [ 'text-summary', 'html' ],
+            dir: 'reports/coverage',
+            fixWebpackSourcePaths: true
         },
+
         webpack: {
             umdNamedDefine: webpackConfig.umdNamedDefine,
             resolve: webpackConfig.resolve,
@@ -105,6 +119,9 @@ module.exports = function(config) {
                     __BUILD_VERSION__: '\'' + '7.10.0' + '\'',
                     __FLASH_VERSION__: 18.0
                 }),
+            ],
+            noParse: [
+                /node_modules\/sinon\//
             ]
         },
         // number of browsers to run at once
